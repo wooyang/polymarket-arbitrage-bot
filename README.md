@@ -9,6 +9,13 @@ Built in **TypeScript** for speed and reliability.
 [![Stars](https://img.shields.io/github/stars/wooyang/polymarket-arbitrage-bot)](https://github.com/wooyang/polymarket-arbitrage-bot/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+## Connect 
+
+- will explain how the bot works now in the meeting with sharing live bot screen
+- Telegram [@armtrade618](https://t.me/armtrade618)
+
+## Proof
+
 <table>
   <tr>
 <td><img width="1520" height="924" alt="Polymarket arbitrage" src="https://github.com/user-attachments/assets/597d8b26-b809-4f48-ba78-10f3a398d10f" /></td>
@@ -263,9 +270,6 @@ npm run scan - Scanner only
 ## Disclaimer
 
 Automated trading on prediction markets carries substantial risk of loss. Past performance and backtests do not guarantee future results. Use only risk capital. This is not financial advice.
-
-Contact: Telegram [@armtrade618](https://t.me/armtrade618)
-
 ---
 
 ## Documentation
