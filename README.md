@@ -50,7 +50,7 @@ The bot implements **multiple proven arbitrage strategies**. Here's a full compa
 | **Intra-Market Arbitrage**    | Buy YES + NO when combined price < $1.00 (classic sum < 1)                 | Very Low       | 1-6%         | Medium             | Full        | Frequent             | Beginners, stable profit  |
 | **Cross-Platform Arbitrage**  | Exploit price differences between Polymarket & Kalshi (or other platforms) | Low            | 2-8%         | High               | Partial     | Medium               | High capital users        |
 | **Multi-Outcome / Bundle Arb**| Multi-candidate markets where probabilities don't sum to 100%               | Low            | 1-5%         | Medium             | Full        | Occasional           | Election & event markets  |
-| **Latency / Temporal Arb**    | Exploit price lag vs external feeds (e.g. crypto spot prices)               | Medium         | 0.5-3%       | Very High          | Full        | Very Frequent        | Crypto 5m/15m markets     |
+| **Latency / Temporal Arb**    | Exploit price lag vs Chainlink TWAP via Polymarket RTDS on crypto up/down markets | Medium         | 0.5-3%       | Very High          | Full        | Very Frequent        | Crypto 5m/15m markets     |
 | **Correlation / Logical Arb** | Exploit inconsistencies between related markets (e.g. BTC vs ETH)           | Medium         | 1-4%         | High               | Full        | Medium               | Advanced users            |
 | **Tail-End / Resolution Arb** | Buy near-certain outcomes (0.95-0.99) close to market resolution            | Very Low       | 1-5%         | Low                | Full        | End of market life   | Low volatility            |
 | **Market Making (Spread)**    | Provide liquidity and earn the bid-ask spread                               | Low-Medium     | 0.5-2%       | High               | Partial     | Continuous           | High volume traders       |
@@ -166,7 +166,7 @@ export const CONFIG = {
   betMode: 'kelly',
   chainlinkTwapEnabled: true,
   executionMode: 'immediate',
-  strategies: ['intra-market', 'latency', 'correlation', 'tail-end'],
+  strategies: ['intra-market', 'multi-outcome', 'latency', 'correlation', 'tail-end'],
 };
 ```
 ---
@@ -175,86 +175,63 @@ export const CONFIG = {
 
 ```
 src/
-├── bot.ts
-├── chainlinkTwap.ts     # Polymarket RTDS Chainlink TWAP feed
-├── orderSlicing.ts      # Optional large-order slicing
-├── strategies/          # One file per strategy
-│   ├── intraMarket.ts
-│   ├── latency.ts
-│   ├── correlation.ts
-│   └── tailEnd.ts
-├── arbEngine.ts         # Strategy selector
-├── trader.ts
-├── market.ts
-└── config.ts
+├── bot.ts                 # Entry point, polling loop
+├── config.ts              # CONFIG + .env parsing
+├── types.ts               # Shared TypeScript types
+├── chainlinkTwap.ts       # Polymarket RTDS Chainlink TWAP feed
+├── externalPrice.ts       # Chainlink TWAP + price-to-beat for latency
+├── orderSlicing.ts        # Optional large-order slicing
+├── market.ts              # Gamma API + CLOB WebSocket
+├── trader.ts              # CLOB order execution
+├── risk.ts                # Kelly sizing, exposure limits
+├── logger.ts              # Logging helpers
+├── arbEngine.ts           # Strategy router
+└── strategies/
+    ├── intraMarket.ts
+    ├── multiOutcome.ts
+    ├── latency.ts
+    ├── correlation.ts
+    └── tailEnd.ts
 ```
 ---
 
-## Some Strategies Code Examples
+## Code Examples
 
-1. src/strategies/intraMarket.ts
+**Intra-market** (`src/strategies/intraMarket.ts`):
 
-```
-export async function checkIntraMarket(market: MarketData) {
-  const { yesPrice, noPrice } = market;
-  const sum = yesPrice + noPrice;
-  const edge = 1.00 - sum;
-
-  if (edge >= CONFIG.minEdge) {
-    const size = calculatePositionSize(edge, market.liquidity);
-    await executeArbitrage(market.id, size, yesPrice, noPrice);
-    log(`Intra-Market Arb executed: ${edge.toFixed(2)}% edge`);
-  }
-}
-
-```
-2. src/strategies/latency.ts
-
-```
-export async function checkLatency(market: MarketData, externalPrice: number) {
-  const impliedProb = getImpliedProbability(market);
-  const diff = Math.abs(impliedProb - externalPrice);
-
-  if (diff > CONFIG.minLatencyEdge) {
-    // Execute directional bet based on lag
-    await trader.placeOrder(market.id, determineSide(externalPrice), CONFIG.betSize);
-  }
-}
-
-```
-3. src/strategies/tailEnd.ts
-
-```
-export async function checkTailEnd(market: MarketData) {
-  if (market.timeToResolution < 24 * 60 * 60 && 
-      market.highestPrice > 0.96) {
-    await trader.buyCertainty(market.id, market.highestOutcome);
-  }
+```ts
+const edge = 1.0 - (yesPrice + noPrice);
+if (edge >= CONFIG.minEdge) {
+  await trader.executeArbitrage(market, size, yesPrice, noPrice);
 }
 ```
-4. src/arbEngine.ts (Main Router)
 
-```
-export async function runArbitrageScan() {
-  const markets = await fetchAllMarkets();
-  
-  for (const market of markets) {
-    if (CONFIG.strategies.includes('intra-market')) 
-      await checkIntraMarket(market);
-    
-    if (CONFIG.strategies.includes('latency')) 
-      await checkLatency(market, await getExternalPrice(market));
-    // ... other strategies
-  }
+**Latency / Chainlink TWAP** (`src/strategies/latency.ts`):
+
+```ts
+const external = await getExternalPrice(market); // chainlink-twap or coingecko fallback
+const diff = Math.abs(impliedProb - external.impliedProbability);
+if (diff > CONFIG.minLatencyEdge) {
+  await trader.placeOrder({ ... side, reason: `latency arb [${external.source}]` });
 }
+```
 
+**Strategy router** (`src/arbEngine.ts`):
+
+```ts
+for (const market of allMarkets) {
+  if (CONFIG.strategies.includes('intra-market')) await checkIntraMarket(market, trader);
+  if (CONFIG.strategies.includes('latency')) await checkLatency(market, trader);
+  // correlation, tail-end, multi-outcome ...
+}
 ```
 ---
 
 ## Stack
 
-- StackTypeScript + Node.js
-- Polymarket CLOB + WebSocket
+- TypeScript + Node.js 18+
+- Polymarket CLOB API + WebSocket (`@polymarket/clob-client`)
+- Polymarket RTDS for Chainlink TWAP (`wss://ws-live-data.polymarket.com`)
 - Ethers.js
 
 ---
@@ -272,8 +249,24 @@ npm run scan - Scanner only
 
 ## Disclaimer
 
-Automated trading on prediction markets carries substantial risk of loss. Past performance and backtests do not guarantee future results. Use only risk capital. This is not financial advice.Contact: 
-Telegram [@armtrade618](https://t.me/armtrade618)
+Automated trading on prediction markets carries substantial risk of loss. Past performance and backtests do not guarantee future results. Use only risk capital. This is not financial advice.
+
+Contact: Telegram [@armtrade618](https://t.me/armtrade618)
+
+---
+
+## Documentation
+
+All documentation lives in this **README** and the **[live site](https://wooyang.github.io/polymarket-arbitrage-bot/)** — no separate `docs/` folder needed at this stage.
+
+| Resource | Contents |
+|----------|----------|
+| [README.md](README.md) | Setup, config, strategies, Chainlink TWAP, code examples |
+| [index.html](index.html) | SEO landing page (GitHub Pages) |
+| [.env.example](.env.example) | Environment variable reference |
+| [Polymarket Chainlink TWAP docs](https://docs.polymarket.com/market-data/chainlink-twap) | Official settlement spec |
+
+Add a `docs/` folder later only if you split guides (e.g. `docs/DEPLOY.md`, `docs/STRATEGIES.md`) or move to a multi-page docs site.
 
 ---
 
@@ -281,9 +274,9 @@ Telegram [@armtrade618](https://t.me/armtrade618)
 
 **Primary:** Polymarket arbitrage bot, Polymarket arbitrage, Polymarket arbitrage trading bot
 
-**Secondary:** Polymarket trading bot, Polymarket bot, prediction market arbitrage bot, Polymarket CLOB arbitrage, automated Polymarket arbitrage
+**Secondary:** Polymarket trading bot, Polymarket bot, prediction market arbitrage bot, Polymarket CLOB arbitrage, Chainlink TWAP Polymarket, Polymarket RTDS
 
-**Long-tail:** intra-market arbitrage bot, YES NO arbitrage bot, multi-outcome bundle arbitrage, latency arbitrage Polymarket, tail-end resolution arbitrage, Polymarket market making bot
+**Long-tail:** intra-market arbitrage bot, YES NO arbitrage bot, crypto up down bot, latency arbitrage Polymarket, tail-end resolution arbitrage, Chainlink TWAP settlement bot
 
 **Recommended GitHub topics:** `polymarket`, `polymarket-arbitrage`, `arbitrage-bot`, `trading-bot`, `prediction-markets`, `typescript`, `clob`, `polygon`, `automated-trading`
 

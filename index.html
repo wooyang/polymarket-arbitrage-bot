@@ -6,8 +6,8 @@
 
   <title>Polymarket Arbitrage Bot & Trading Bot | TypeScript</title>
 
-  <meta name="description" content="Open-source Polymarket arbitrage bot and trading bot written in TypeScript. Multi-strategy arbitrage detection, automated CLOB execution, real-time WebSocket monitoring on prediction markets." />
-  <meta name="keywords" content="polymarket arbitrage bot, polymarket arbitrage trading bot, polymarket trading bot, polymarket bot, prediction market arbitrage bot, polymarket clob arbitrage, automated polymarket arbitrage, intra-market arbitrage bot, yes no arbitrage bot, polymarket automation, polymarket api, polymarket typescript, polymarket bot github" />
+  <meta name="description" content="Open-source Polymarket arbitrage bot in TypeScript. Multi-strategy detection, CLOB execution, Chainlink TWAP via RTDS for crypto up/down markets, and real-time WebSocket monitoring." />
+  <meta name="keywords" content="polymarket arbitrage bot, polymarket trading bot, chainlink twap polymarket, polymarket rtds, crypto up down bot, polymarket clob arbitrage, prediction market arbitrage bot, intra-market arbitrage bot, yes no arbitrage bot, polymarket typescript, automated polymarket arbitrage" />
   <meta name="robots" content="index, follow" />
   <meta name="author" content="polymarket-arbitrage-bot" />
   <link rel="canonical" href="https://wooyang.github.io/polymarket-arbitrage-bot/" />
@@ -15,7 +15,7 @@
 
   <!-- Open Graph -->
   <meta property="og:title" content="Polymarket Arbitrage Bot & Trading Bot | TypeScript" />
-  <meta property="og:description" content="Automated multi-strategy arbitrage detection and trade execution for Polymarket prediction markets. Built in TypeScript with Polymarket CLOB API and WebSocket feed." />
+  <meta property="og:description" content="TypeScript Polymarket arbitrage bot with CLOB execution, Chainlink TWAP RTDS feed, and multi-strategy detection for prediction markets." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://wooyang.github.io/polymarket-arbitrage-bot/" />
   <meta property="og:site_name" content="polymarket-arbitrage-bot" />
@@ -28,7 +28,7 @@
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Polymarket Arbitrage Bot & Trading Bot" />
-  <meta name="twitter:description" content="Open-source TypeScript bot for automated Polymarket trading and multi-strategy arbitrage detection." />
+  <meta name="twitter:description" content="Open-source TypeScript Polymarket bot with Chainlink TWAP RTDS, CLOB execution, and multi-strategy arbitrage detection." />
   <meta name="twitter:image" content="https://wooyang.github.io/polymarket-arbitrage-bot/og-image.png" />
   <meta name="twitter:image:alt" content="Polymarket Arbitrage Bot - open-source TypeScript trading bot" />
 
@@ -45,7 +45,7 @@
     "programmingLanguage": "TypeScript",
     "codeRepository": "https://github.com/wooyang/polymarket-arbitrage-bot",
     "license": "https://opensource.org/licenses/MIT",
-    "keywords": "polymarket arbitrage bot, polymarket trading bot, prediction market arbitrage bot, polymarket clob arbitrage, automated polymarket arbitrage, typescript",
+    "keywords": "polymarket arbitrage bot, polymarket trading bot, chainlink twap polymarket, polymarket rtds, prediction market arbitrage bot, polymarket clob arbitrage, automated polymarket arbitrage, typescript",
     "author": {
       "@type": "Organization",
       "name": "wooyang",
@@ -97,6 +97,14 @@
         "acceptedAnswer": {
           "@type": "Answer",
           "text": "Yes. polymarket-arbitrage-bot is open source under the MIT license, written in TypeScript, and available on GitHub. It includes dry-run, scan-only, and live trading modes."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does this bot support Polymarket Chainlink TWAP settlement?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. From August 7 2026, Polymarket crypto up/down markets settle on Chainlink-computed TWAP (30s for 5-minute markets, 60s for 15-minute and 4-hour markets). This bot subscribes to Polymarket RTDS topics crypto_prices_twap_thirty and crypto_prices_twap_sixty and uses those prices in the latency strategy versus each market's price-to-beat."
         }
       }
     ]
@@ -518,7 +526,7 @@
           </tr>
           <tr>
             <td><strong>Latency / Temporal Arb</strong></td>
-            <td>Exploit price lag vs external feeds (crypto spot prices, oracle delays)</td>
+            <td>Exploit price lag vs Chainlink TWAP (Polymarket RTDS) on crypto up/down markets</td>
             <td>0.5–3%</td>
             <td><span class="tag">Full</span></td>
           </tr>
@@ -598,6 +606,43 @@
 Sum    = <span class="token-yellow">0.96</span>  <span class="token-muted">← 4% edge. Bot detects this, sizes bets, fires orders on both sides.</span></pre>
   </section>
 
+  <section id="chainlink-twap">
+    <h2>Chainlink TWAP (Aug 2026 Settlement)</h2>
+    <p class="section-intro">
+      From <strong style="color:var(--text)">August 7, 2026 UTC</strong>, Polymarket crypto up/down markets resolve using
+      Chainlink-computed TWAP — not a single snapshot at close. This <strong style="color:var(--text)">Polymarket arbitrage bot</strong>
+      subscribes to RTDS at <code>wss://ws-live-data.polymarket.com</code> and uses the same reference prices markets settle on.
+    </p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Market duration</th>
+            <th>Settlement TWAP window</th>
+            <th>RTDS topic</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>5-minute</strong></td>
+            <td>30-second Chainlink TWAP</td>
+            <td><code>crypto_prices_twap_thirty</code></td>
+          </tr>
+          <tr>
+            <td><strong>15-minute / 4-hour</strong></td>
+            <td>60-second Chainlink TWAP</td>
+            <td><code>crypto_prices_twap_sixty</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="section-intro" style="margin-top:16px">
+      The latency strategy compares Polymarket implied odds against Chainlink TWAP vs the market's
+      <strong style="color:var(--text)">price-to-beat</strong> — aligned with post-August settlement rules.
+      <a href="https://docs.polymarket.com/market-data/chainlink-twap">Official Polymarket docs →</a>
+    </p>
+  </section>
+
   <section id="faq">
     <h2>FAQ</h2>
     <div class="faq">
@@ -621,6 +666,14 @@ Sum    = <span class="token-yellow">0.96</span>  <span class="token-muted">← 4
         <p>
           Intra-market arbitrage, multi-outcome bundle arbitrage, latency/temporal arbitrage, correlation/logical arbitrage,
           tail-end resolution arbitrage, and partial cross-platform arbitrage. Market making is on the roadmap.
+        </p>
+      </div>
+      <div class="faq-item">
+        <h3>Does this bot support Polymarket Chainlink TWAP settlement?</h3>
+        <p>
+          Yes. From August 7 2026, crypto up/down markets settle on Chainlink TWAP (30s for 5-minute markets,
+          60s for 15-minute and 4-hour markets). The bot subscribes to Polymarket RTDS and uses those prices
+          in the latency strategy versus each market's price-to-beat.
         </p>
       </div>
       <div class="faq-item">
