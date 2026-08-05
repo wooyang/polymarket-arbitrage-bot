@@ -136,10 +136,10 @@ Starting **August 7, 2026 UTC**, Polymarket crypto up/down markets resolve using
 | 4-hour          | 60-second Chainlink TWAP |
 
 The bot subscribes to Polymarket **RTDS** (`wss://ws-live-data.polymarket.com`) topics:
-- `crypto_prices_twap_thirty` — 30s window
-- `crypto_prices_twap_sixty` — 60s window
+- `crypto_prices_twap_thirty` - 30s window
+- `crypto_prices_twap_sixty` - 60s window
 
-The **latency strategy** compares Polymarket implied odds against Chainlink TWAP vs the market's **price-to-beat** — matching how markets now settle.
+The **latency strategy** compares Polymarket implied odds against Chainlink TWAP vs the market's **price-to-beat** - matching how markets now settle.
 
 ```
 CHAINLINK_TWAP_ENABLED=true
@@ -154,7 +154,7 @@ Docs: [Polymarket Chainlink TWAP](https://docs.polymarket.com/market-data/chainl
 
 ## Order Slicing (optional)
 
-Separate from Chainlink settlement TWAP — splits large **orders** over time to reduce book impact:
+Separate from Chainlink settlement TWAP - splits large **orders** over time to reduce book impact:
 
 ```
 EXECUTION_MODE=sliced       # immediate | sliced
@@ -270,7 +270,7 @@ Contact: Telegram [@armtrade618](https://t.me/armtrade618)
 
 ## Documentation
 
-All documentation lives in this **README** and the **[live site](https://wooyang.github.io/polymarket-arbitrage-bot/)** — no separate `docs/` folder needed at this stage.
+All documentation lives in this **README** and the **[live site](https://wooyang.github.io/polymarket-arbitrage-bot/)** - no separate `docs/` folder needed at this stage.
 
 | Resource | Contents |
 |----------|----------|
