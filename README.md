@@ -11,7 +11,7 @@ Built in **TypeScript** for speed and reliability.
 
 ## Connect 
 
-- will explain how the bot works now in the meeting with sharing live bot screen
+- I'll explain how the bot currently works during the meeting while sharing the live bot screen.
 - Telegram [@armtrade618](https://t.me/armtrade618)
 
 ## Proof
