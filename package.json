@@ -1,0 +1,38 @@
+{
+  "name": "polymarket-arbitrage-bot",
+  "version": "1.0.0",
+  "description": "Polymarket arbitrage bot with multi-strategy detection and CLOB execution",
+  "type": "module",
+  "main": "dist/bot.js",
+  "scripts": {
+    "bot": "tsx src/bot.ts --mode=live",
+    "bot:dry": "tsx src/bot.ts --mode=dry",
+    "bot:sliced": "tsx src/bot.ts --mode=dry --execution=sliced",
+    "scan": "tsx src/bot.ts --mode=scan",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "polymarket",
+    "arbitrage-bot",
+    "trading-bot",
+    "prediction-markets",
+    "typescript"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@polymarket/clob-client": "^5.8.1",
+    "dotenv": "^16.4.7",
+    "ethers": "^5.8.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "@types/ws": "^8.5.14",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
+  }
+}

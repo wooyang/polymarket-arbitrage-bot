@@ -477,6 +477,14 @@
       <h3><span class="dot dot-yellow"></span> Risk Controls</h3>
       <p>Max exposure per market, daily loss limits, configurable cooldown after consecutive losses. Kelly or flat bet sizing.</p>
     </div>
+    <div class="card">
+      <h3><span class="dot"></span> Chainlink TWAP Feed</h3>
+      <p>Subscribes to Polymarket RTDS for 30s/60s Chainlink TWAP — matching the Aug 2026 crypto up/down settlement update.</p>
+    </div>
+    <div class="card">
+      <h3><span class="dot"></span> Order Slicing</h3>
+      <p>Optionally split large orders into timed slices to reduce slippage. YES/NO arb legs stay synced per slice.</p>
+    </div>
   </div>
 
   <section id="strategies">
@@ -623,6 +631,28 @@ Sum    = <span class="token-yellow">0.96</span>  <span class="token-muted">← 4
         </p>
       </div>
     </div>
+  </section>
+
+  <section id="open-source">
+    <h2>Open Source</h2>
+    <p class="section-intro">
+      The full <strong style="color:var(--text)">Polymarket arbitrage bot</strong> source code is on GitHub —
+      TypeScript modules for market scanning, CLOB execution, and each arbitrage strategy.
+      Clone the repo, run <code>npm install</code>, and start in scan or dry-run mode before going live.
+    </p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="https://github.com/wooyang/polymarket-arbitrage-bot/tree/master/src">
+        Browse src/ on GitHub
+      </a>
+      <a class="btn btn-secondary" href="https://github.com/wooyang/polymarket-arbitrage-bot#quick-start">
+        Installation Guide
+      </a>
+    </div>
+    <pre style="margin-top:16px"><span class="token-green">git</span> clone https://github.com/wooyang/polymarket-arbitrage-bot.git
+<span class="token-green">cd</span> polymarket-arbitrage-bot
+<span class="token-green">npm</span> install
+<span class="token-green">npm</span> run scan      <span class="token-muted"># scan markets, no wallet</span>
+<span class="token-green">npm</span> run bot:dry   <span class="token-muted"># dry-run mode</span></pre>
   </section>
 
   <section id="about">

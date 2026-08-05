@@ -8,7 +8,7 @@ Built in **TypeScript** for speed and reliability.
 
 [![Stars](https://img.shields.io/github/stars/wooyang/polymarket-arbitrage-bot)](https://github.com/wooyang/polymarket-arbitrage-bot/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-<img width="1520" height="924" alt="image" src="https://github.com/user-attachments/assets/35428a80-2d09-45c3-904b-9c455bc1326c" />
+<img width="1520" height="924" alt="Polymarket arbitrage bot dashboard screenshot" src="https://github.com/user-attachments/assets/35428a80-2d09-45c3-904b-9c455bc1326c" />
 
 ---
 
@@ -16,7 +16,8 @@ Built in **TypeScript** for speed and reliability.
 
 - Multi-strategy arbitrage engine (see comparison below)
 - Real-time WebSocket market monitoring
-- Automated CLOB order execution
+- **Chainlink TWAP** via Polymarket RTDS (Aug 2026 crypto settlement update)
+- Automated CLOB order execution with optional order slicing
 - Kelly Criterion + risk management
 - Dry-run, scan, and live modes
 - Modular & extensible architecture
@@ -60,6 +61,7 @@ The bot implements **multiple proven arbitrage strategies**. Here's a full compa
 **v1.0 (Current)**
 - Intra-Market, Latency, Correlation, Tail-End, Multi-Outcome
 - Full CLOB execution + WebSocket
+- Chainlink TWAP RTDS feed for crypto up/down markets (Aug 7 2026 settlement)
 - Kelly + risk controls
 - Dry-run mode
 
@@ -110,6 +112,50 @@ CHAIN_ID=137
 ```
 ---
 
+## Chainlink TWAP (Polymarket Aug 7 2026 Update)
+
+Starting **August 7, 2026 UTC**, Polymarket crypto up/down markets resolve using **Chainlink-computed TWAP**, not a single snapshot at close:
+
+| Market duration | Settlement TWAP window |
+|-----------------|------------------------|
+| 5-minute        | 30-second Chainlink TWAP |
+| 15-minute       | 60-second Chainlink TWAP |
+| 4-hour          | 60-second Chainlink TWAP |
+
+The bot subscribes to Polymarket **RTDS** (`wss://ws-live-data.polymarket.com`) topics:
+- `crypto_prices_twap_thirty` — 30s window
+- `crypto_prices_twap_sixty` — 60s window
+
+The **latency strategy** compares Polymarket implied odds against Chainlink TWAP vs the market's **price-to-beat** — matching how markets now settle.
+
+```
+CHAINLINK_TWAP_ENABLED=true
+RTDS_URL=wss://ws-live-data.polymarket.com
+CHAINLINK_TWAP_SYMBOLS=btc/usd,eth/usd,sol/usd
+CHAINLINK_TWAP_MAX_AGE_MS=30000
+```
+
+Docs: [Polymarket Chainlink TWAP](https://docs.polymarket.com/market-data/chainlink-twap)
+
+---
+
+## Order Slicing (optional)
+
+Separate from Chainlink settlement TWAP — splits large **orders** over time to reduce book impact:
+
+```
+EXECUTION_MODE=sliced       # immediate | sliced
+SLICE_COUNT=5
+SLICE_DURATION_MS=60000
+SLICE_MIN_SIZE=5
+```
+
+```
+npm run bot:sliced          # dry-run with sliced execution
+```
+
+---
+
 ## Configuration (src/config.ts)
 
 ```
@@ -118,7 +164,9 @@ export const CONFIG = {
   maxExposureUSDC: 500,
   pollIntervalMs: 500,
   betMode: 'kelly',
-  strategies: ['intra-market', 'latency', 'correlation', 'tail-end'], // Enable/disable
+  chainlinkTwapEnabled: true,
+  executionMode: 'immediate',
+  strategies: ['intra-market', 'latency', 'correlation', 'tail-end'],
 };
 ```
 ---
@@ -128,7 +176,9 @@ export const CONFIG = {
 ```
 src/
 ├── bot.ts
-├── strategies/          # New folder: one file per strategy
+├── chainlinkTwap.ts     # Polymarket RTDS Chainlink TWAP feed
+├── orderSlicing.ts      # Optional large-order slicing
+├── strategies/          # One file per strategy
 │   ├── intraMarket.ts
 │   ├── latency.ts
 │   ├── correlation.ts
@@ -214,6 +264,7 @@ export async function runArbitrageScan() {
 ```
 npm run bot - Live
 npm run bot:dry - Simulation
+npm run bot:sliced - Dry-run with sliced order execution
 npm run scan - Scanner only
 ```
 
