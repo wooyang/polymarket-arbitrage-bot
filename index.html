@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Polymarket Arbitrage Bot & Trading Bot - TypeScript | polymarket-arbitrage-bot</title>
+
+  <meta name="description" content="Open-source Polymarket arbitrage bot and trading bot written in TypeScript. Multi-strategy arbitrage detection, automated CLOB execution, real-time WebSocket monitoring on prediction markets." />
+  <meta name="keywords" content="polymarket arbitrage bot, polymarket arbitrage trading bot, polymarket trading bot, polymarket bot, prediction market arbitrage bot, polymarket clob arbitrage, automated polymarket arbitrage, intra-market arbitrage bot, yes no arbitrage bot, polymarket automation, polymarket api, polymarket typescript, polymarket bot github" />
+  <meta name="robots" content="index, follow" />
+  <meta name="author" content="polymarket-arbitrage-bot" />
+  <link rel="canonical" href="https://wooyang.github.io/polymarket-arbitrage-bot/" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Polymarket Arbitrage Bot & Trading Bot - TypeScript" />
+  <meta property="og:description" content="Automated multi-strategy arbitrage detection and trade execution for Polymarket prediction markets. Built in TypeScript with Polymarket CLOB API and WebSocket feed." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://wooyang.github.io/polymarket-arbitrage-bot/" />
+  <meta property="og:site_name" content="polymarket-arbitrage-bot" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:image" content="https://wooyang.github.io/polymarket-arbitrage-bot/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Polymarket Arbitrage Bot - open-source TypeScript trading bot" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Polymarket Arbitrage Bot & Trading Bot" />
+  <meta name="twitter:description" content="Open-source TypeScript bot for automated Polymarket trading and multi-strategy arbitrage detection." />
+  <meta name="twitter:image" content="https://wooyang.github.io/polymarket-arbitrage-bot/og-image.png" />
+  <meta name="twitter:image:alt" content="Polymarket Arbitrage Bot - open-source TypeScript trading bot" />
+
+  <!-- Schema.org structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "polymarket-arbitrage-bot",
+    "url": "https://wooyang.github.io/polymarket-arbitrage-bot/",
+    "description": "Automated Polymarket arbitrage bot and trading bot for prediction markets. Multi-strategy arbitrage detection with CLOB API execution, built in TypeScript.",
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Node.js",
+    "programmingLanguage": "TypeScript",
+    "codeRepository": "https://github.com/wooyang/polymarket-arbitrage-bot",
+    "license": "https://opensource.org/licenses/MIT",
+    "keywords": "polymarket arbitrage bot, polymarket trading bot, prediction market arbitrage bot, polymarket clob arbitrage, automated polymarket arbitrage, typescript",
+    "author": {
+      "@type": "Organization",
+      "name": "wooyang",
+      "url": "https://github.com/wooyang"
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "sameAs": [
+      "https://github.com/wooyang/polymarket-arbitrage-bot",
+      "https://t.me/armtrade618"
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is a Polymarket arbitrage bot?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "A Polymarket arbitrage bot is automated software that monitors prediction market prices on Polymarket and executes trades when mispriced opportunities appear — for example, when YES and NO prices sum to less than $1.00. This open-source bot detects those edges and places orders via the Polymarket CLOB API."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How does YES/NO arbitrage work on Polymarket?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "In a binary Polymarket market, fair pricing means P(YES) + P(NO) = 1.00. When the order book is thin or slow, the sum can drop below 1.00 — creating a risk-free edge. The bot buys both sides simultaneously, locking in profit when the market resolves."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What arbitrage strategies does this Polymarket bot support?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "The bot supports intra-market arbitrage (YES/NO sum below 1.00), multi-outcome bundle arbitrage, latency/temporal arbitrage, correlation/logical arbitrage, tail-end resolution arbitrage, and partial cross-platform arbitrage with Kalshi. Market making support is planned."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is this Polymarket trading bot open source?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. polymarket-arbitrage-bot is open source under the MIT license, written in TypeScript, and available on GitHub. It includes dry-run, scan-only, and live trading modes."
+        }
+      }
+    ]
+  }
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --yellow: #d29922;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --code-bg: #1f2428;
+      --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .repo-icon {
+      width: 18px; height: 18px;
+      fill: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .repo-path {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .repo-path a { color: var(--accent); font-weight: 600; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid;
+    }
+
+    .badge-public { border-color: var(--border); color: var(--muted); }
+    .badge-ts { background: #007acc22; border-color: #007acc55; color: #79b8ff; }
+    .badge-mit { background: #3fb95022; border-color: #3fb95055; color: var(--green); }
+
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    .hero {
+      margin-bottom: 48px;
+    }
+
+    .hero h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      letter-spacing: -0.3px;
+    }
+
+    .hero h1 span { color: var(--accent); }
+
+    .hero p {
+      color: var(--muted);
+      font-size: 16px;
+      max-width: 640px;
+      margin-bottom: 20px;
+    }
+
+    .badges { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 28px; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 18px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+
+    .btn:hover { opacity: .85; text-decoration: none; }
+    .btn-primary { background: var(--accent); color: #0d1117; }
+    .btn-secondary { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
+
+    .cta-row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+    }
+
+    .card h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card p {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      flex-shrink: 0;
+    }
+
+    .dot-yellow { background: var(--yellow); }
+
+    section { margin-bottom: 48px; }
+
+    section h2 {
+      font-size: 18px;
+      font-weight: 700;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+
+    section h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin: 20px 0 8px;
+    }
+
+    .section-intro {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 16px;
+      line-height: 1.7;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th, td {
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: var(--surface);
+      color: var(--text);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    td { color: var(--muted); }
+    tr:last-child td { border-bottom: none; }
+    td strong { color: var(--text); }
+
+    .tag {
+      display: inline-block;
+      padding: 1px 7px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+      background: #3fb95022;
+      color: var(--green);
+      border: 1px solid #3fb95055;
+    }
+
+    .tag-partial {
+      background: #d2992222;
+      color: var(--yellow);
+      border-color: #d2992255;
+    }
+
+    .faq { display: flex; flex-direction: column; gap: 16px; }
+
+    .faq-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+    }
+
+    .faq-item h3 {
+      margin: 0 0 8px;
+      font-size: 14px;
+    }
+
+    .faq-item p {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.65;
+      margin: 0;
+    }
+
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.7;
+      color: #e6edf3;
+    }
+
+    code {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 6px;
+    }
+
+    .token-green { color: #3fb950; }
+    .token-blue  { color: #79b8ff; }
+    .token-yellow{ color: #e3b341; }
+    .token-muted { color: #8b949e; }
+
+    .steps { counter-reset: step; display: flex; flex-direction: column; gap: 14px; }
+
+    .step {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .step-num {
+      counter-increment: step;
+      flex-shrink: 0;
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #0d1117;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .step-body { padding-top: 3px; }
+    .step-body strong { display: block; margin-bottom: 4px; font-size: 14px; }
+    .step-body p { font-size: 13px; color: var(--muted); }
+
+    .alert {
+      background: #d2992222;
+      border: 1px solid #d2992255;
+      border-left: 4px solid var(--yellow);
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 28px;
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 24px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    footer a { color: var(--accent); }
+
+    @media (max-width: 600px) {
+      .hero h1 { font-size: 22px; }
+      main { padding: 24px 16px 60px; }
+      th, td { padding: 8px 10px; font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <svg class="repo-icon" viewBox="0 0 16 16"><path d="M2 2.5A2.5 2.5 0 0 1 4.5 0h8.75a.75.75 0 0 1 .75.75v12.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1 0-1.5h1.75v-2h-8a1 1 0 0 0-.714 1.7.75.75 0 1 1-1.072 1.05A2.495 2.495 0 0 1 2 11.5Zm10.5-1h-8a1 1 0 0 0-1 1v6.708A2.486 2.486 0 0 1 4.5 9h8Z"/></svg>
+  <span class="repo-path">
+    <a href="https://github.com/wooyang">wooyang</a> /
+    <a href="https://github.com/wooyang/polymarket-arbitrage-bot"><strong>polymarket-arbitrage-bot</strong></a>
+  </span>
+  <span class="badge badge-public">Public</span>
+</header>
+
+<main>
+
+  <div class="hero">
+    <h1>Polymarket <span>Arbitrage Bot</span> &amp; Trading Bot</h1>
+    <p>
+      Open-source Polymarket arbitrage trading bot with multi-strategy detection and automated CLOB execution.
+      Monitors prediction market odds in real time, spots mispriced YES/NO outcomes, and fires orders via the Polymarket CLOB API.
+      Written in TypeScript.
+    </p>
+    <div class="badges">
+      <span class="badge badge-ts">TypeScript</span>
+      <span class="badge badge-mit">MIT License</span>
+      <span class="badge badge-public">Polymarket CLOB API</span>
+    </div>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="https://github.com/wooyang/polymarket-arbitrage-bot">
+        View on GitHub
+      </a>
+      <a class="btn btn-secondary" href="https://github.com/wooyang/polymarket-arbitrage-bot#quick-start">
+        Quick Start
+      </a>
+    </div>
+  </div>
+
+  <div class="alert">
+    ⚠️ This is experimental software. Polymarket markets can be illiquid. You can lose money. Not financial advice.
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h3><span class="dot"></span> Arbitrage Detection</h3>
+      <p>Scans markets where YES + NO prices don't sum to 1.00. Flags edge and calculates optimal bet sizing automatically.</p>
+    </div>
+    <div class="card">
+      <h3><span class="dot"></span> Automated Trading</h3>
+      <p>Places and manages limit/market orders via the Polymarket CLOB API without any manual input.</p>
+    </div>
+    <div class="card">
+      <h3><span class="dot"></span> Real-time Monitoring</h3>
+      <p>Streams live price data over WebSocket. Reacts to market moves in milliseconds, not seconds.</p>
+    </div>
+    <div class="card">
+      <h3><span class="dot dot-yellow"></span> Risk Controls</h3>
+      <p>Max exposure per market, daily loss limits, configurable cooldown after consecutive losses. Kelly or flat bet sizing.</p>
+    </div>
+  </div>
+
+  <section id="strategies">
+    <h2>Arbitrage Strategies</h2>
+    <p class="section-intro">
+      This Polymarket arbitrage bot implements multiple proven strategies — from classic intra-market YES/NO arbitrage
+      to latency and correlation plays. Each module runs independently and can be enabled in <code>config.ts</code>.
+    </p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Strategy</th>
+            <th>Description</th>
+            <th>Typical Edge</th>
+            <th>Support</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Intra-Market Arbitrage</strong></td>
+            <td>Buy YES + NO when combined price &lt; $1.00 (classic YES/NO arbitrage bot logic)</td>
+            <td>1–6%</td>
+            <td><span class="tag">Full</span></td>
+          </tr>
+          <tr>
+            <td><strong>Multi-Outcome Bundle Arb</strong></td>
+            <td>Multi-candidate markets where probabilities don't sum to 100%</td>
+            <td>1–5%</td>
+            <td><span class="tag">Full</span></td>
+          </tr>
+          <tr>
+            <td><strong>Latency / Temporal Arb</strong></td>
+            <td>Exploit price lag vs external feeds (crypto spot prices, oracle delays)</td>
+            <td>0.5–3%</td>
+            <td><span class="tag">Full</span></td>
+          </tr>
+          <tr>
+            <td><strong>Correlation / Logical Arb</strong></td>
+            <td>Inconsistencies between related markets (e.g. BTC vs ETH prediction markets)</td>
+            <td>1–4%</td>
+            <td><span class="tag">Full</span></td>
+          </tr>
+          <tr>
+            <td><strong>Tail-End Resolution Arb</strong></td>
+            <td>Buy near-certain outcomes (0.95–0.99) close to market resolution</td>
+            <td>1–5%</td>
+            <td><span class="tag">Full</span></td>
+          </tr>
+          <tr>
+            <td><strong>Cross-Platform Arbitrage</strong></td>
+            <td>Price differences between Polymarket and Kalshi or other platforms</td>
+            <td>2–8%</td>
+            <td><span class="tag tag-partial">Partial</span></td>
+          </tr>
+          <tr>
+            <td><strong>Market Making (Spread)</strong></td>
+            <td>Provide liquidity and earn the bid-ask spread on Polymarket CLOB</td>
+            <td>0.5–2%</td>
+            <td><span class="tag tag-partial">Planned</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Quick Start</h2>
+    <div class="steps">
+      <div class="step">
+        <span class="step-num">1</span>
+        <div class="step-body">
+          <strong>Clone the repo</strong>
+          <pre><span class="token-green">git</span> clone https://github.com/wooyang/polymarket-arbitrage-bot.git
+<span class="token-green">cd</span> polymarket-arbitrage-bot
+<span class="token-green">npm</span> install</pre>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step-num">2</span>
+        <div class="step-body">
+          <strong>Configure .env</strong>
+          <pre><span class="token-blue">PRIVATE_KEY</span>=your_wallet_private_key
+<span class="token-blue">POLYMARKET_API_KEY</span>=your_api_key
+<span class="token-blue">POLYMARKET_API_SECRET</span>=your_api_secret
+<span class="token-blue">POLYMARKET_API_PASSPHRASE</span>=your_passphrase
+<span class="token-blue">CHAIN_ID</span>=<span class="token-yellow">137</span></pre>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step-num">3</span>
+        <div class="step-body">
+          <strong>Run</strong>
+          <pre><span class="token-green">npm</span> run bot        <span class="token-muted"># live trading</span>
+<span class="token-green">npm</span> run bot:dry   <span class="token-muted"># dry-run, no real orders</span>
+<span class="token-green">npm</span> run scan      <span class="token-muted"># scan only, no execution</span></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>How YES/NO Arbitrage Works</h2>
+    <p class="section-intro">
+      Polymarket markets are binary YES/NO. In a fair, efficient market <code>P(YES) + P(NO) = 1.00</code>.
+      When the order book is thin or slow to update, a gap appears — this is what automated Polymarket CLOB arbitrage targets:
+    </p>
+    <pre><span class="token-blue">P(YES)</span> = <span class="token-yellow">0.48</span>
+<span class="token-blue">P(NO) </span> = <span class="token-yellow">0.48</span>
+<span class="token-muted">──────────────────</span>
+Sum    = <span class="token-yellow">0.96</span>  <span class="token-muted">← 4% edge. Bot detects this, sizes bets, fires orders on both sides.</span></pre>
+  </section>
+
+  <section id="faq">
+    <h2>FAQ</h2>
+    <div class="faq">
+      <div class="faq-item">
+        <h3>What is a Polymarket arbitrage bot?</h3>
+        <p>
+          A Polymarket arbitrage bot is automated software that monitors prediction market prices and executes trades
+          when mispriced opportunities appear. This open-source bot connects to the Polymarket CLOB API, detects edges
+          in real time, and places orders without manual input.
+        </p>
+      </div>
+      <div class="faq-item">
+        <h3>How does YES/NO arbitrage work on Polymarket?</h3>
+        <p>
+          In a binary market, fair pricing means YES + NO = $1.00. When the sum drops below $1.00, buying both sides
+          locks in a guaranteed profit at resolution. This intra-market arbitrage bot automates that detection and execution.
+        </p>
+      </div>
+      <div class="faq-item">
+        <h3>What strategies does this Polymarket trading bot support?</h3>
+        <p>
+          Intra-market arbitrage, multi-outcome bundle arbitrage, latency/temporal arbitrage, correlation/logical arbitrage,
+          tail-end resolution arbitrage, and partial cross-platform arbitrage. Market making is on the roadmap.
+        </p>
+      </div>
+      <div class="faq-item">
+        <h3>Is this prediction market arbitrage bot open source?</h3>
+        <p>
+          Yes — MIT licensed, written in TypeScript, available on GitHub. Includes dry-run, scan-only, and live trading modes
+          so developers can study or deploy automated Polymarket arbitrage safely.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="about">
+    <h2>About</h2>
+    <p class="section-intro">
+      <strong style="color:var(--text)">polymarket-arbitrage-bot</strong> is an open-source
+      <strong style="color:var(--text)">Polymarket trading bot</strong> and
+      <strong style="color:var(--text)">Polymarket arbitrage bot</strong> built in TypeScript.
+      It connects to the Polymarket CLOB API to read order books, monitor market prices in real time,
+      and execute automated trades on prediction markets running on the Polygon network.
+      The arbitrage module detects when outcome probabilities on a Polymarket market are mispriced —
+      meaning the sum of YES and NO prices is below 1.00 — and exploits that edge by
+      placing simultaneous orders on both sides.
+      The trading module supports limit and market orders, configurable position sizing (Kelly criterion or flat bet),
+      and built-in risk controls including max exposure limits and daily drawdown stops.
+      This polymarket bot is aimed at developers who want a fully automated, open-source starting point for
+      Polymarket automation, prediction market trading, or studying how CLOB-based arbitrage works in practice.
+    </p>
+  </section>
+
+</main>
+
+<footer>
+  <p>
+    <a href="https://github.com/wooyang/polymarket-arbitrage-bot">polymarket-arbitrage-bot</a>
+    · MIT License ·
+    <a href="https://github.com/wooyang/polymarket-arbitrage-bot/issues">Issues</a> ·
+    <a href="https://github.com/wooyang/polymarket-arbitrage-bot#quick-start">Docs</a>
+  </p>
+  <p style="margin-top:8px">
+    Open-source <a href="https://github.com/wooyang/polymarket-arbitrage-bot">Polymarket arbitrage bot</a> for automated prediction market trading on Polygon.
+  </p>
+</footer>
+
+</body>
+</html>

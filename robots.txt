@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://wooyang.github.io/polymarket-arbitrage-bot/sitemap.xml
