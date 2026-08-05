@@ -8,7 +8,20 @@ Built in **TypeScript** for speed and reliability.
 
 [![Stars](https://img.shields.io/github/stars/wooyang/polymarket-arbitrage-bot)](https://github.com/wooyang/polymarket-arbitrage-bot/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-<img width="1520" height="924" alt="Polymarket arbitrage bot dashboard screenshot" src="https://github.com/user-attachments/assets/35428a80-2d09-45c3-904b-9c455bc1326c" />
+
+<table>
+  <tr>
+<td><img width="1520" height="924" alt="Polymarket arbitrage" src="https://github.com/user-attachments/assets/597d8b26-b809-4f48-ba78-10f3a398d10f" /></td>
+<td><img width="1889" height="990" alt="Polymarket arbitrage" src="https://github.com/user-attachments/assets/d3fdba2e-e81f-4dde-9909-99658a2a1684" /></td>
+  </tr>
+  <tr>
+    <td><img width="1896" height="990" alt="Polymarket arbitrage" src="https://github.com/user-attachments/assets/847f1785-6465-4948-9480-7d866cc8a6b5" /></td>
+<td><img width="1891" height="990" alt="Polymarket arbitrage" src="https://github.com/user-attachments/assets/0b444442-0ac0-48f8-9824-2b445af6c792" /></td>
+  </tr>
+  <tr>
+   <td><img width="1888" height="987" alt="Polymarket arbitrage" src="https://github.com/user-attachments/assets/04e95774-73ab-4ffb-84b4-7364294fb6d5" /></td>
+  </tr>
+</table>
 
 ---
 
